@@ -51,7 +51,7 @@ struct Param {
 } param;
 
 void recvThread(int sd) {
-	cout << "connected\n";
+	cout <<"connected: " << sd << endl;
 	static const int BUFSIZE = 65536;
 	char buf[BUFSIZE];
 	while (true) {
@@ -62,7 +62,7 @@ void recvThread(int sd) {
 			break;
 		}
 		buf[res] = '\0';
-		cout << buf;
+		cout << sd << ": " <<buf;
 		cout.flush();
 		if (param.echo) {
 			if(param.broadCast){
