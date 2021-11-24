@@ -6,10 +6,10 @@ LDLIBS+=-pthread
 all: ts tc
 
 ts: ts.o mingw_net.o
-	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o echo-server
 
 tc: tc.o mingw_net.o
-	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o $@
+	$(LINK.cpp) $^ $(LOADLIBES) $(LDLIBS) -o echo-client
 
 clean:
-	rm -f ts tc *.o
+	rm -f echo-server echo-client *.o
