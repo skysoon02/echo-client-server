@@ -11,20 +11,26 @@
 #include <iostream>
 #include <thread>
 
+#include <vector>
+
 using namespace std;
 
 #ifdef WIN32
 void perror(const char* msg) { fprintf(stderr, "%s %ld\n", msg, GetLastError()); }
 #endif // WIN32
 
+
+vector<int> cli_sd_vec;
+
+
 void usage() {
-	cout << "syntax: ts [-e] <port>\n";
-	cout << "  -e : echo\n";
-	cout << "sample: ts 1234\n";
+	cout << "syntax : echo-server <port> [-e[-b]]\n";
+	cout << "sample : echo-server 1234 -e -b\n";
 }
 
 struct Param {
 	bool echo{false};
+	bool broadCast{false};
 	uint16_t port{0};
 
 	bool parse(int argc, char* argv[]) {
@@ -33,8 +39,13 @@ struct Param {
 				echo = true;
 				continue;
 			}
-			port = stoi(argv[i++]);
+			if (strcmp(argv[i], "-b") == 0) {
+				broadCast = true;
+				continue;
+			}
+			port = stoi(argv[i]);
 		}
+		cout << "Mode: echo=" << echo << " broadcast=" << broadCast << endl;
 		return port != 0;
 	}
 } param;
@@ -54,11 +65,23 @@ void recvThread(int sd) {
 		cout << buf;
 		cout.flush();
 		if (param.echo) {
-			res = send(sd, buf, res, 0);
-			if (res == 0 || res == -1) {
-				cerr << "send return " << res;
-				perror(" ");
-				break;
+			if(param.broadCast){
+				for (auto iter = cli_sd_vec.begin(); iter != cli_sd_vec.end(); iter++){
+					ssize_t res_s = send(*iter, buf, res, 0);
+					if (res_s == 0 || res_s == -1) {
+						cerr << "send return " << res_s;
+						perror(" ");
+						break;
+					}
+				}
+			}
+			else{
+				ssize_t res_s = send(sd, buf, res, 0);
+				if (res_s == 0 || res_s == -1) {
+					cerr << "send return " << res_s;
+					perror(" ");
+					break;
+				}
 			}
 		}
 	}
@@ -118,6 +141,7 @@ int main(int argc, char* argv[]) {
 			perror("accept");
 			break;
 		}
+		cli_sd_vec.push_back(cli_sd);
 		thread* t = new thread(recvThread, cli_sd);
 		t->detach();
 	}
